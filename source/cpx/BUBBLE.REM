@@ -1,0 +1,73 @@
+#Aufrufroutine
+:>{ Aufruf mit gedrckter Maustaste? }
+:
+:Das mu natrlich { keine Maustaste gedrckt? } heien.
+:
+#Das CPX-Modul zur Konfiguration
+:>hat, da es nur auf BUBBLEGEM_FONT h”rt, der kann das FONT-Protokoll 
+:
+:Kleiner Hinweis auf Jinnee?
+:
+:>auch ausschalten. BubbleGEM leitet dann Tastendrcke, die bei offener 
+:>Blase anfallen, nicht an die Applikation "darunter" weiter.
+:
+:Das klingt so, als ob man bei offener Blase beliebig tippen kann...
+:Es geht hierbei aber nur um genau die Taste, mit der die Blase
+:evtl. geschlossen wird (falls das nicht durch Mausklick geschieht).
+:
+:Und setz das CPX-Bild doch bitte ganz oben auf die Seite (ein neuer
+:Screenshot liegt bei).
+:
+#Aufruf von BubbleGEM
+:>#define BUBBLEGEM_SHOW          0xBABB
+:
+:Davor fehlt noch BUBBLEGEM_REQUEST (0xbaba), auerdem w„re eine
+:Leerzeile zwischen MGLOBAL und den Message-Konstanten nicht
+:schlecht.
+:
+:BTW: Der Index ist noch nicht ganz vollst„ndig, k”nntest Du den
+:auch noch ein bichen vergr”ern?
+:
+:>Der Aufruf aus modalen Dialogen (siehe auch die Aufrufroutine) erfolgt 
+:[...]
+:
+:Da habe ich noch einen wichtigen Hinweis vergessen: Einen modalen
+:Aufruf darf man nur dann durchfhren, wenn der Cookie BGEM vorhanden
+:ist (so, wie es im Beispielaufruf steht).
+:
+#Zeitgesteuerter Aufruf
+:>   ù pipe[0]:=BUBBLEGEM_REQUEST;
+:
+:Hier solltest Du evtl. noch eine šberschrift ("Die Message
+:BUBBLEGEM_REQUEST ist folgendermaen aufgebaut:") einfgen.
+:
+:> - Die Zeit bis zur Anzeige kann auch per Kommandozeile ("-t 
+:
+:Dieser und der folgende Punkt sollten sicherlich eine
+:Stufe h”her (schwarze Punkte) erscheinen, oder?
+:
+:> - Hinweis: Die zeitgesteuerte Hilfe funktioniert nur 
+:
+:Aus diesem Punkt wrde ich zwei Einzelpunkt machen (ohne "Hinweis").
+:
+#BubbleGEM-Cookie
+:>5.2  BubbleGEM-Cookie                                                 
+:
+:"Cookies"
+:
+:Evtl. kannst Du die Beschreibung des BGHD-Cookies hierhin
+:verschieben, dann sind alle Cookies an einer Stelle (beim
+:D„mon sollte dann nur noch ein Verweis auf die BGHD-
+:Beschreibung stehen).
+:
+#Schriftauswahl
+:>Hilfeblasen. ID und Gr”e werden ohne Prfung bernommen. Auerdem 
+:>reagiert BubbleGEM auf FONT_CHANGED.
+:
+:Wenn das entsprechende Flag im CPX bzw. Cookie  eingestellt ist.
+:
+#Historie
+:>   ù Ein CPX erleichtert die Konfiguration.
+:
+:Dank an Behne&Behne fr das CPX-Grundgerst
+:

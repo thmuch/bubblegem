@@ -1,0 +1,14 @@
+BubbleGEM 07 (28.04.98)
+=======================
+
+- BUBBLE.APP gibt beim Start eine Warnung aus, wenn der BHLP-
+  Cookie nicht angelegt werden kann (weil der CookieJar voll ist)
+- wenn BGC_TOPONLY ($0010) gesetzt ist, arbeitet der HelpDemon nur
+  beim Top-Window
+
+- Hilfe in modalen Dialogen geht wieder
+- auf Systemen ohne wind_update()-Testmodus werden dadurch evtl.
+  doppelte Hilfstexte angezeigt (direkt nacheinander)
+
+- CPX: Option "nur Top" (-> BGC_TOPONLY), Zeiten einstellbar
+  ("auf"=Zeit, bis HelpDemon aktiv wird; "zu"=Mindestsichtbarkeit)

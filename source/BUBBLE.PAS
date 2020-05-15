@@ -9,7 +9,7 @@
  *  Thomas.Much@stud.uni-karlsruhe.de  *
  ***************************************
  *    erstellt am:        23.02.1997   *
- *    letztes Update am:  28.04.1998   *
+ *    letztes Update am:  11.06.1998   *
  ***************************************}
 
 {$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
@@ -24,7 +24,7 @@ uses
 
 const
 
-	RELEASE           = 7;
+	RELEASE           = 8;
 
 	BUBBLEGEM_REQUEST = integer($baba);
 	BUBBLEGEM_SHOW    = integer($babb);
@@ -60,12 +60,13 @@ const
 	CLIP_ON           = 1;
 	FF_DEVSPEC        = 0;
 	DESK              = 0;
-	BUBBLETEXT        = 'BubbleGEM Release 07 (28.04.98).|Copyright '#189'1997/98 by Thomas_Much@ka2.maus.de, http://thmuch.home.pages.de';
+	BUBBLETEXT        = 'BubbleGEM Release 08-beta (11.06.98).|Copyright '#189'1997/98 by Thomas_Much@ka2.maus.de, http://thmuch.home.pages.de';
 	HELPCURSOR     : MFORM = 
 		(mf_xhot: 0; mf_yhot: 0; mf_nplanes: 1; mf_fg: 0; mf_bg: 1;
 		 mf_mask: (-16130,-24125,-28287,-30311,-31247,-31773,-32313,-32625,-32743,-31871,-27709,-22017,-13849,-31513,1278,896);
 		 mf_data: (0,16444,24702,28774,30734,31772,32312,32624,32742,31870,27708,17920,1560,792,768,0));
 	emptyfill : array [0..15] of integer = (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+	WRAPCHAR  : char = #13;
 	BRACKETS  : set of char = [')',']','}'];
 	WRAPCHARS : set of char = [' ',',','.',';','?','!',':','-',')',']','}','\','/'];
 
@@ -560,7 +561,7 @@ procedure ShowBubble;
 							while (s[i] in BRACKETS) and (i>0) do dec(i);
 						while not(s[i] in WRAPCHARS) and (i>0) do dec(i);
 						if i=0 then i:=l;
-						ret:=ret+StrPTrimF(copy(s,1,i))+'|';
+						ret:=ret+StrPTrimF(copy(s,1,i))+WRAPCHAR;
 						s:=copy(s,i+1,length(s)-i);
 						goto _nochmal
 					end;
@@ -571,16 +572,38 @@ procedure ShowBubble;
 			width:=workOut[0]-3*boxWidth;
 			if width>340 then width:=340;
 			ret:='';
-			t:=pos('|',txt);
+			t:=pos(WRAPCHAR,txt);
 			while t>0 do
 				begin
 					add(copy(txt,1,t-1));
-					ret:=ret+'|';
+					ret:=ret+WRAPCHAR;
 					txt:=copy(txt,t+1,length(txt)-t);
-					t:=pos('|',txt)
+					t:=pos(WRAPCHAR,txt)
 				end;
 			add(txt);
 			txt:=ret
+		end;
+
+	procedure ReplaceWrapChar(var txt: string);
+		var q: integer;
+	
+		begin
+			q:=1;
+			while q<=length(txt) do
+				begin
+					if txt[q]='|' then
+						begin
+							if q<length(txt) then
+								if txt[q+1]='|' then
+									begin
+										txt:=copy(txt,1,q)+copy(txt,q+2,length(txt)-q-1);
+										inc(q);
+										continue
+									end;
+							txt[q]:=WRAPCHAR
+						end;
+					inc(q)
+				end
 		end;
 
 	function BubbleHelp(mX,mY: integer; ishelp: boolean): boolean;
@@ -614,14 +637,14 @@ procedure ShowBubble;
 				lanz:=1;
 				mlen:=0;
 				s:=Hlp;
-				i:=pos('|',s);
+				i:=pos(WRAPCHAR,s);
 				while i>0 do
 					begin
 						vqt_extent(vdiHandle,copy(s,1,i-1),ext);
 						if ext[2]>mlen then mlen:=ext[2];
 						s:=copy(s,i+1,length(s)-i);
 						inc(lanz);
-						i:=pos('|',s)
+						i:=pos(WRAPCHAR,s)
 					end;
 				vqt_extent(vdiHandle,s,ext);
 				if ext[2]>mlen then mlen:=ext[2]
@@ -705,7 +728,11 @@ procedure ShowBubble;
 			pxy[3]:=workOut[1];
 			vs_clip(vdiHandle,CLIP_ON,pxy);
 			vst_alignment(vdiHandle,TA_LEFT,TA_TOP,dummy,dummy);
-			if not(ismfdb) then BubbleWrap(Hlp);
+			if not(ismfdb) then
+				begin
+					ReplaceWrapChar(Hlp);
+					BubbleWrap(Hlp)
+				end;
 			GetMax;
 			if winstyle then
 				begin
@@ -831,13 +858,13 @@ procedure ShowBubble;
 					pxya[3]:=mY;
 					v_pline(vdiHandle,3,pxya)
 				end;
-			dummy:=pos('|',Hlp);
+			dummy:=pos(WRAPCHAR,Hlp);
 			while dummy>0 do
 				begin
 					v_gtext(vdiHandle,xpos,ypos,copy(Hlp,1,dummy-1));
 					Hlp:=copy(Hlp,dummy+1,length(Hlp)-dummy);
 					inc(ypos,boxHeight);
-					dummy:=pos('|',Hlp)
+					dummy:=pos(WRAPCHAR,Hlp)
 				end;
 			v_gtext(vdiHandle,xpos,ypos,Hlp);
 			pxy:=bpxy.b41;
@@ -1209,3 +1236,8 @@ begin
 	BubbleLoop;
 	ExitBubble
 end.
+
+{ 
+	- '|' im Text durch '||' kodierbar, wird vlnr ersetzt
+	// nach C portieren
+}

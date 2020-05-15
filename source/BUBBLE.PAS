@@ -3,13 +3,11 @@
  ***************************************
  *   Dieses Programm ist Freeware!     *
  ***************************************
- *    Thomas Much, Gerwigstraže 46,    *
- * 76131 Karlsruhe, Fax (0721) 622821  *
- *         Thomas Much @ KA2           *
- *  Thomas.Much@stud.uni-karlsruhe.de  *
+ *  Copyright 1997-98 by Thomas Much   *
+ *       thomas@snailshell.de          *
  ***************************************
  *    erstellt am:        23.02.1997   *
- *    letztes Update am:  11.06.1998   *
+ *    letztes Update am:  04.08.1998   *
  ***************************************}
 
 {$B+,D-,G-,I-,L-,N-,P-,Q-,R-,S-,T-,V-,X+,Z-}
@@ -34,8 +32,10 @@ const
 	BUBBLEGEM_HIDE    = integer($babf);
 
 	BGS7_USRHIDE      = $0001;
-	BGS7_MFDB         = $0002; { !!! }
+	BGS7_MFDB         = $0002; { TODO }
 	BGS7_MOUSE        = $0004;
+	BGS7_2STRINGS     = $0008;
+	BGS7_REQBYDEMON   = $0010; { TODO }
 	BGS7_ERROR        = $8000;
 
 	BGC_FONTCHANGED   = $0001;
@@ -43,6 +43,7 @@ const
 	BGC_SENDKEY       = $0004;
 	BGC_DEMONACTIVE   = $0008;
 	BGC_TOPONLY       = $0010;
+	BGC_AUTOSTYLE     = $0020; { TODO }
 
 	GS_REQUEST        = $1350;
 	GS_REPLY          = $1351;
@@ -53,20 +54,21 @@ const
 	FONT_CHANGED      = $7a18;
 	FONT_ACK          = $7a1a;
 	SC_CHANGED        = $0050;
+	COLORS_CHANGED    = $0054;
 	SCF_TEXT          = $0002;
-	_p_cookies        = $000005a0;
 	GLOBAL            = $20;
 	RC                = 2;
 	CLIP_ON           = 1;
 	FF_DEVSPEC        = 0;
 	DESK              = 0;
-	BUBBLETEXT        = 'BubbleGEM Release 08-beta (11.06.98).|Copyright '#189'1997/98 by Thomas_Much@ka2.maus.de, http://thmuch.home.pages.de';
+	BUBBLETEXT        = 'BubbleGEM Release 08-beta (04.08.98).|Copyright '#189'1997/98/99 by Thomas.Much@snailshell.de, http://www.snailshell.de/BubbleGEM/';
 	HELPCURSOR     : MFORM = 
 		(mf_xhot: 0; mf_yhot: 0; mf_nplanes: 1; mf_fg: 0; mf_bg: 1;
 		 mf_mask: (-16130,-24125,-28287,-30311,-31247,-31773,-32313,-32625,-32743,-31871,-27709,-22017,-13849,-31513,1278,896);
 		 mf_data: (0,16444,24702,28774,30734,31772,32312,32624,32742,31870,27708,17920,1560,792,768,0));
 	emptyfill : array [0..15] of integer = (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
-	WRAPCHAR  : char = #13;
+	WRAPCHAR  : char = #27;
+	TWOSTRCHAR: char = #31;
 	BRACKETS  : set of char = [')',']','}'];
 	WRAPCHARS : set of char = [' ',',','.',';','?','!',':','-',')',']','}','\','/'];
 
@@ -197,17 +199,10 @@ function HeapFunc(size: longint): integer;
   end;
 
 
-function getjar: longint;
-
-	begin
-		getjar:=PLongint(_p_cookies)^
-	end;
-
-
 function GetCookieJar: PCookie;
 
 	begin
-		GetCookieJar:=PCookie(supexec(getjar))
+		GetCookieJar:=PCookie(setexc(360,pointer(-1)))
 	end;
 
 
@@ -301,7 +296,7 @@ procedure GlobalAlloc(var p: pointer; size: longint);
 	end;
 
 
-function bestcolor_gelb(var rgb: ARRAY_3): integer;
+function bestcolor_gelb: integer;
 	var col      : ARRAY_3;
 	    bestabst,
 	    abst,diff: longint;
@@ -310,25 +305,44 @@ function bestcolor_gelb(var rgb: ARRAY_3): integer;
 	begin
 		best:=-1;
 		bestabst:=0;
-		i:=Yellow;
+		i:=0;
 		while i<workOut[13] do
 			begin
 				vq_color(vdiHandle,i,1,col);
-        diff:=rgb[0]-col[0];
-        abst:=sqr(diff);
-        diff:=rgb[1]-col[1];
-        inc(abst,sqr(diff));
-        diff:=rgb[2]-col[2];
-        inc(abst,sqr(diff));
-        if (best=-1) or (abst<bestabst) then
-        	begin
-        		best:=i;
-        		bestabst:=abst
-        	end;
-				if i=Yellow then i:=15;
+				if col[0]=1000 then
+					if col[1]=1000 then
+						begin
+							abst:=abs(500-col[2]);
+			        if (best<0) or (abst<bestabst) or ((abst=bestabst) and (col[2]<500)) then
+			        	begin
+			        		best:=i;
+			        		bestabst:=abst
+			        	end
+						end;
 				inc(i)
 			end;
-		if best=-1 then best:=White;
+		if best<0 then
+			begin
+				i:=Yellow;
+				while i<workOut[13] do
+					begin
+						vq_color(vdiHandle,i,1,col);
+		        diff:=1000-col[0];
+		        abst:=sqr(diff);
+		        diff:=1000-col[1];
+		        inc(abst,sqr(diff));
+		        diff:=500-col[2];
+		        inc(abst,sqr(diff));
+		        if (best<0) or (abst<bestabst) then
+		        	begin
+		        		best:=i;
+		        		bestabst:=abst
+		        	end;
+						if i=Yellow then i:=15;
+						inc(i)
+					end;
+				if best<0 then best:=White;
+			end;
 		bestcolor_gelb:=best
 	end;
 
@@ -521,7 +535,6 @@ procedure HideBubble;
 procedure ShowBubble;
 	var Hlp       : string;
 	    answ      : ARRAY_8;
-	    rgb       : ARRAY_3;
 	    i,
 	    fontid,
 	    fontheight,
@@ -534,6 +547,7 @@ procedure ShowBubble;
 	    winstyle,
 	    userhide,
 	    ismfdb    : boolean;
+	    hpc,pwc   : PChar;
 
 	procedure BubbleWrap(var txt: string);
 		var ret    : string;
@@ -1000,20 +1014,31 @@ procedure ShowBubble;
 							userhide:=((pipe[7] and BGS7_USRHIDE)>0);
 							usemouse:=((pipe[7] and BGS7_MOUSE)>0);
 							userApp:=pipe[1];
-							if ismfdb then Hlp:=''
-							else
-								Hlp:=StrPas(PChar(longint(word(pipe[5]))*longint(65536)+longint(word(pipe[6]))));
 							if not(GetCookie('BHLP',bval)) then bval:=$00c8ffff;
 							winstyle:=((bval and BGC_NOWINSTYLE)=0);
 							sendkey:=((bval and BGC_SENDKEY)>0);
+							if ismfdb then Hlp:=''
+							else
+								begin
+									hpc:=PChar(longint(word(pipe[5]))*longint(65536)+longint(word(pipe[6])));
+									if (pipe[7] and BGS7_2STRINGS)>0 then
+										begin
+											if winstyle then hpc:=PChar(longint(StrEnd(hpc))+1);
+										end
+									else
+										begin
+											pwc:=strscan(hpc,TWOSTRCHAR);
+											if (pwc<>nil) then
+												begin
+													if winstyle then hpc:=PChar(longint(pwc)+1)
+													else
+														pwc^:=#0;
+												end
+										end;
+									Hlp:=StrPas(hpc)
+								end;
 							if winstyle then
-								if hellgelb=-1 then
-									begin
-										rgb[0]:=1000;
-										rgb[1]:=1000;
-										rgb[2]:=500;
-										hellgelb:=bestcolor_gelb(rgb)
-									end;
+								if hellgelb=-1 then hellgelb:=bestcolor_gelb;
 							if not(ismfdb) then
 								if BubbleHelp(pipe[3],pipe[4],false) then
 									begin
@@ -1179,6 +1204,8 @@ procedure BubbleLoop;
 					FontChanged;
 				BUBBLEGEM_REQUEST:
 					ChangeDemon;
+				COLORS_CHANGED:
+					hellgelb:=-1;
 				AP_TERM:
 					break;
 				end;
@@ -1237,7 +1264,14 @@ begin
 	ExitBubble
 end.
 
-{ 
+
+{ TODO:
 	- '|' im Text durch '||' kodierbar, wird vlnr ersetzt
+	- BGS7_2STRINGS
+	- alternativ Trennung durch ASCII-31 (BGS7_2STRING dann *nicht* gesetzt)
+	- ASCII-27 wird intern verwendet und darf in den Hilfstexten nicht vorkommen
+	- supexec() -> setexc() (?)
+	- bei COLORS_CHANGED hellgelb:=-1
+	// BGS7_REQBYDEMON, BGC_AUTOSTYLE
 	// nach C portieren
 }
